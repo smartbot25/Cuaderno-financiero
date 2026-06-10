@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mi Cuaderno</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1a1a2e">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Inter:wght@400;500;600&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #1a1a2e;
+    --ink-light: #555577;
+    --page: #fdfaf3;
+    --page-line: #e8e0cc;
+    --income: #2d6a4f;
+    --income-bg: #d8f3dc;
+    --expense: #b5192c;
+    --expense-bg: #ffe0e3;
+    --accent: #3a86ff;
+    --shadow: rgba(0,0,0,0.08);
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #ede9e0;
+    min-height: 100vh;
+    padding: 24px 16px 60px;
+    background-image:
+      radial-gradient(circle at 20% 20%, rgba(58,134,255,0.05) 0%, transparent 60%),
+      radial-gradient(circle at 80% 80%, rgba(181,25,44,0.04) 0%, transparent 60%);
+  }
+
+  .cuaderno {
+    max-width: 640px;
+    margin: 0 auto;
+  }
+
+  /* ENCABEZADO */
+  .header {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  .header h1 {
+    font-family: 'Caveat', cursive;
+    font-size: 2.6rem;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -0.5px;
+  }
+  .header p {
+    font-size: 0.82rem;
+    color: var(--ink-light);
+    margin-top: 4px;
+  }
+
+  /* SELECTOR PERÍODO */
+  .periodo-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    background: var(--page);
+    border-radius: 14px;
+    padding: 6px;
+    box-shadow: 0 2px 8px var(--shadow);
+  }
+  .periodo-btn {
+    flex: 1;
+    padding: 9px;
+    border: none;
+    background: transparent;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--ink-light);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .periodo-btn.active {
+    background: var(--ink);
+    color: #fff;
+  }
+
+  /* SELECTOR MES/SEMANA */
+  .nav-periodo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding: 10px 16px;
+    background: var(--page);
+    border-radius: 14px;
+    box-shadow: 0 2px 8px var(--shadow);
+  }
+  .nav-btn {
+    background: none;
+    border: none;
+    font-size: 1.3rem;
+    cursor: pointer;
+    color: var(--ink-light);
+    padding: 4px 10px;
+    border-radius: 8px;
+    transition: background 0.15s;
+  }
+  .nav-btn:hover { background: var(--page-line); }
+  .nav-label {
+    font-family: 'Caveat', cursive;
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  /* RESUMEN */
+  .resumen {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .card {
+    background: var(--page);
+    border-radius: 14px;
+    padding: 14px 12px;
+    text-align: center;
+    box-shadow: 0 2px 8px var(--shadow);
+  }
+  .card .etiqueta {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--ink-light);
+    margin-bottom: 6px;
+  }
+  .card .monto {
+    font-family: 'Caveat', cursive;
+    font-size: 1.45rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .card.ingresos .monto { color: var(--income); }
+  .card.gastos .monto { color: var(--expense); }
+  .card.balance .monto { color: var(--ink); }
+  .card .porcentaje {
+    font-size: 0.72rem;
+    color: var(--ink-light);
+    margin-top: 4px;
+  }
+
+  /* BARRA VISUAL */
+  .barra-wrap {
+    background: var(--page);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px var(--shadow);
+  }
+  .barra-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: var(--ink-light);
+    margin-bottom: 8px;
+  }
+  .barra-track {
+    height: 10px;
+    background: var(--income-bg);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .barra-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--expense), #e63950);
+    border-radius: 99px;
+    transition: width 0.5s ease;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  /* FORMULARIO */
+  .form-card {
+    background: var(--page);
+    border-radius: 16px;
+    padding: 18px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px var(--shadow);
+    border-top: 3px solid var(--accent);
+  }
+  .form-card h3 {
+    font-family: 'Caveat', cursive;
+    font-size: 1.2rem;
+    color: var(--ink);
+    margin-bottom: 14px;
+  }
+  .form-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+  .tipo-btn {
+    flex: 1;
+    padding: 10px;
+    border: 2px solid var(--page-line);
+    border-radius: 10px;
+    background: transparent;
+    font-size: 0.88rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--ink-light);
+  }
+  .tipo-btn.ingreso.active {
+    border-color: var(--income);
+    background: var(--income-bg);
+    color: var(--income);
+  }
+  .tipo-btn.gasto.active {
+    border-color: var(--expense);
+    background: var(--expense-bg);
+    color: var(--expense);
+  }
+  input[type="text"], input[type="number"] {
+    width: 100%;
+    padding: 11px 14px;
+    border: 2px solid var(--page-line);
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-family: 'Inter', sans-serif;
+    background: #fff;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  input:focus { border-color: var(--accent); }
+  input[type="number"] { width: 140px; flex-shrink: 0; }
+  .input-row { display: flex; gap: 8px; align-items: center; }
+  .input-row input[type="text"] { flex: 1; }
+  .btn-agregar {
+    width: 100%;
+    margin-top: 10px;
+    padding: 12px;
+    background: var(--ink);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    font-family: 'Inter', sans-serif;
+  }
+  .btn-agregar:hover { opacity: 0.85; }
+
+  /* LISTA */
+  .lista-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .lista-header h3 {
+    font-family: 'Caveat', cursive;
+    font-size: 1.2rem;
+    color: var(--ink);
+  }
+  .btn-limpiar {
+    font-size: 0.75rem;
+    color: var(--expense);
+    background: none;
+    border: 1px solid var(--expense);
+    border-radius: 8px;
+    padding: 4px 10px;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+  }
+  .btn-limpiar:hover { opacity: 1; }
+
+  .lista-vacia {
+    background: var(--page);
+    border-radius: 14px;
+    padding: 36px 20px;
+    text-align: center;
+    box-shadow: 0 2px 8px var(--shadow);
+  }
+  .lista-vacia .icono { font-size: 2.5rem; margin-bottom: 10px; }
+  .lista-vacia p {
+    font-family: 'Caveat', cursive;
+    font-size: 1.15rem;
+    color: var(--ink-light);
+  }
+
+  .entrada {
+    background: var(--page);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 1px 4px var(--shadow);
+    border-left: 4px solid transparent;
+    animation: slideIn 0.2s ease;
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .entrada.ingreso { border-left-color: var(--income); }
+  .entrada.gasto { border-left-color: var(--expense); }
+  .entrada .desc {
+    flex: 1;
+    font-size: 0.9rem;
+    color: var(--ink);
+    line-height: 1.3;
+  }
+  .entrada .desc small {
+    display: block;
+    font-size: 0.72rem;
+    color: var(--ink-light);
+    margin-top: 2px;
+  }
+  .entrada .valor {
+    font-family: 'Caveat', cursive;
+    font-size: 1.15rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .entrada.ingreso .valor { color: var(--income); }
+  .entrada.gasto .valor { color: var(--expense); }
+  .entrada .btn-del {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    color: #ccc;
+    padding: 4px;
+    border-radius: 6px;
+    transition: color 0.2s;
+    line-height: 1;
+  }
+  .entrada.ingreso:hover .btn-del { color: var(--income); }
+  .entrada.gasto:hover .btn-del { color: var(--expense); }
+</style>
+</head>
+<body>
+<div class="cuaderno">
+
+  <div class="header">
+    <h1>📒 Mi Cuaderno</h1>
+    <p>Anota lo que quieras — sin categorías impuestas</p>
+  </div>
+
+  <!-- PERÍODO -->
+  <div class="periodo-bar">
+    <button class="periodo-btn active" onclick="cambiarVista('mes')">Por mes</button>
+    <button class="periodo-btn" onclick="cambiarVista('semana')">Por semana</button>
+  </div>
+
+  <!-- NAVEGACIÓN -->
+  <div class="nav-periodo">
+    <button class="nav-btn" onclick="navegar(-1)">‹</button>
+    <span class="nav-label" id="nav-label">—</span>
+    <button class="nav-btn" onclick="navegar(1)">›</button>
+  </div>
+
+  <!-- RESUMEN -->
+  <div class="resumen">
+    <div class="card ingresos">
+      <div class="etiqueta">Ingresos</div>
+      <div class="monto" id="total-ingresos">S/ 0</div>
+    </div>
+    <div class="card gastos">
+      <div class="etiqueta">Gastos</div>
+      <div class="monto" id="total-gastos">S/ 0</div>
+    </div>
+    <div class="card balance">
+      <div class="etiqueta">Balance</div>
+      <div class="monto" id="total-balance">S/ 0</div>
+      <div class="porcentaje" id="pct-gastos"></div>
+    </div>
+  </div>
+
+  <!-- BARRA -->
+  <div class="barra-wrap" id="barra-wrap" style="display:none">
+    <div class="barra-label">
+      <span>Gastos vs Ingresos</span>
+      <span id="barra-pct">0%</span>
+    </div>
+    <div class="barra-track">
+      <div class="barra-fill" id="barra-fill" style="width:0%"></div>
+    </div>
+  </div>
+
+  <!-- FORMULARIO -->
+  <div class="form-card">
+    <h3>✏️ Agregar anotación</h3>
+    <div class="form-row">
+      <button class="tipo-btn ingreso active" id="btn-ingreso" onclick="setTipo('ingreso')">+ Ingreso</button>
+      <button class="tipo-btn gasto" id="btn-gasto" onclick="setTipo('gasto')">− Gasto</button>
+    </div>
+    <div class="input-row" style="margin-bottom:10px">
+      <input type="text" id="inp-desc" placeholder="¿Qué es? (ej: sueldo, alquiler, deuda...)" maxlength="80">
+      <input type="number" id="inp-monto" placeholder="Monto" min="0" step="0.01">
+    </div>
+    <button class="btn-agregar" onclick="agregar()">Agregar al cuaderno</button>
+  </div>
+
+  <!-- LISTA -->
+  <div class="lista-header">
+    <h3 id="lista-titulo">Anotaciones</h3>
+    <button class="btn-limpiar" onclick="limpiarPeriodo()">Borrar período</button>
+  </div>
+  <div id="lista"></div>
+
+</div>
+
+<script>
+  // ─── ESTADO ───────────────────────────────────────────────
+  let vista = 'mes';   // 'mes' | 'semana'
+  let offset = 0;      // 0 = actual, -1 = anterior, etc.
+  let tipoActual = 'ingreso';
+
+  const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                 'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+  // ─── CLAVE DE PERÍODO ─────────────────────────────────────
+  function claveActual() {
+    const hoy = new Date();
+    if (vista === 'mes') {
+      const d = new Date(hoy.getFullYear(), hoy.getMonth() + offset, 1);
+      return `mes_${d.getFullYear()}_${d.getMonth()}`;
+    } else {
+      // semana ISO
+      const d = new Date(hoy);
+      d.setDate(d.getDate() + offset * 7);
+      const sem = semanaISO(d);
+      return `sem_${sem.year}_${sem.week}`;
+    }
+  }
+
+  function semanaISO(d) {
+    const tmp = new Date(d.valueOf());
+    const dayNum = (d.getDay() + 6) % 7;
+    tmp.setDate(tmp.getDate() - dayNum + 3);
+    const firstThursday = tmp.valueOf();
+    tmp.setMonth(0, 1);
+    if (tmp.getDay() !== 4) {
+      tmp.setMonth(0, 1 + ((4 - tmp.getDay()) + 7) % 7);
+    }
+    const week = 1 + Math.ceil((firstThursday - tmp) / 604800000);
+    return { year: d.getFullYear(), week };
+  }
+
+  function labelPeriodo() {
+    const hoy = new Date();
+    if (vista === 'mes') {
+      const d = new Date(hoy.getFullYear(), hoy.getMonth() + offset, 1);
+      return `${MESES[d.getMonth()]} ${d.getFullYear()}`;
+    } else {
+      const d = new Date(hoy);
+      d.setDate(d.getDate() + offset * 7);
+      const lunes = new Date(d);
+      lunes.setDate(d.getDate() - (d.getDay() + 6) % 7);
+      const domingo = new Date(lunes);
+      domingo.setDate(lunes.getDate() + 6);
+      const fmt = dt => `${dt.getDate()} ${MESES[dt.getMonth()].slice(0,3)}`;
+      return `${fmt(lunes)} – ${fmt(domingo)}`;
+    }
+  }
+
+  // ─── DATOS ────────────────────────────────────────────────
+  function getData() {
+    const raw = localStorage.getItem(claveActual());
+    return raw ? JSON.parse(raw) : [];
+  }
+  function saveData(arr) {
+    localStorage.setItem(claveActual(), JSON.stringify(arr));
+  }
+
+  // ─── UI ───────────────────────────────────────────────────
+  function setTipo(t) {
+    tipoActual = t;
+    document.getElementById('btn-ingreso').className = 'tipo-btn ingreso' + (t==='ingreso' ? ' active' : '');
+    document.getElementById('btn-gasto').className = 'tipo-btn gasto' + (t==='gasto' ? ' active' : '');
+  }
+
+  function cambiarVista(v) {
+    vista = v; offset = 0;
+    document.querySelectorAll('.periodo-btn').forEach((b,i) => {
+      b.classList.toggle('active', (v==='mes' && i===0)||(v==='semana' && i===1));
+    });
+    render();
+  }
+
+  function navegar(dir) { offset += dir; render(); }
+
+  function agregar() {
+    const desc = document.getElementById('inp-desc').value.trim();
+    const monto = parseFloat(document.getElementById('inp-monto').value);
+    if (!desc || isNaN(monto) || monto <= 0) {
+      document.getElementById('inp-desc').focus();
+      return;
+    }
+    const arr = getData();
+    arr.unshift({ id: Date.now(), tipo: tipoActual, desc, monto });
+    saveData(arr);
+    document.getElementById('inp-desc').value = '';
+    document.getElementById('inp-monto').value = '';
+    render();
+  }
+
+  function eliminar(id) {
+    const arr = getData().filter(e => e.id !== id);
+    saveData(arr);
+    render();
+  }
+
+  function limpiarPeriodo() {
+    if (!confirm(`¿Borrar todas las anotaciones de "${labelPeriodo()}"?`)) return;
+    localStorage.removeItem(claveActual());
+    render();
+  }
+
+  function fmt(n) {
+    return 'S/ ' + n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function render() {
+    document.getElementById('nav-label').textContent = labelPeriodo();
+    document.getElementById('lista-titulo').textContent = `Anotaciones · ${labelPeriodo()}`;
+
+    const arr = getData();
+    const ingresos = arr.filter(e=>e.tipo==='ingreso').reduce((s,e)=>s+e.monto,0);
+    const gastos = arr.filter(e=>e.tipo==='gasto').reduce((s,e)=>s+e.monto,0);
+    const balance = ingresos - gastos;
+    const pct = ingresos > 0 ? Math.round((gastos / ingresos) * 100) : 0;
+
+    document.getElementById('total-ingresos').textContent = fmt(ingresos);
+    document.getElementById('total-gastos').textContent = fmt(gastos);
+    const balEl = document.getElementById('total-balance');
+    balEl.textContent = fmt(balance);
+    balEl.style.color = balance >= 0 ? 'var(--income)' : 'var(--expense)';
+
+    const pctEl = document.getElementById('pct-gastos');
+    pctEl.textContent = ingresos > 0 ? `${pct}% gastado` : '';
+
+    // barra
+    const barraWrap = document.getElementById('barra-wrap');
+    if (ingresos > 0 || gastos > 0) {
+      barraWrap.style.display = '';
+      document.getElementById('barra-fill').style.width = Math.min(pct, 100) + '%';
+      document.getElementById('barra-pct').textContent = pct + '%';
+    } else {
+      barraWrap.style.display = 'none';
+    }
+
+    // lista
+    const lista = document.getElementById('lista');
+    if (arr.length === 0) {
+      lista.innerHTML = `
+        <div class="lista-vacia">
+          <div class="icono">📝</div>
+          <p>Cuaderno en blanco.<br>Empieza anotando algo arriba.</p>
+        </div>`;
+      return;
+    }
+    lista.innerHTML = arr.map(e => `
+      <div class="entrada ${e.tipo}">
+        <div class="desc">
+          ${e.desc}
+          <small>${e.tipo === 'ingreso' ? 'Ingreso' : 'Gasto'}</small>
+        </div>
+        <div class="valor">${e.tipo==='ingreso' ? '+' : '−'} ${fmt(e.monto)}</div>
+        <button class="btn-del" onclick="eliminar(${e.id})" title="Eliminar">✕</button>
+      </div>
+    `).join('');
+  }
+
+  // ENTER en inputs
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('inp-desc').addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('inp-monto').focus();
+    });
+    document.getElementById('inp-monto').addEventListener('keydown', e => {
+      if (e.key === 'Enter') agregar();
+    });
+    render();
+
+    // Registrar Service Worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js');
+    }
+  });
+</script>
+</body>
+</html>
