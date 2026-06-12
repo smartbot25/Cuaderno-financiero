@@ -351,14 +351,14 @@
 <div class="cuaderno">
 
   <div class="header">
-    <h1>📒 Mi Cuaderno</h1>
-    <p>Anota lo que quieras — sin categorías impuestas</p>
+    <h1>📒 Cuaderno Finaciero</h1>
+    <p>💰 Planifica y distribuye tu dinero para la próxima semana</p>
   </div>
 
   <!-- PERÍODO -->
   <div class="periodo-bar">
-    <button class="periodo-btn active" onclick="cambiarVista('mes')">Por mes</button>
-    <button class="periodo-btn" onclick="cambiarVista('semana')">Por semana</button>
+<button class="periodo-btn" onclick="cambiarVista('mes')">Por mes</button>
+<button class="periodo-btn active" onclick="cambiarVista('semana')">Por semana</button>
   </div>
 
   <!-- NAVEGACIÓN -->
@@ -421,8 +421,8 @@
 
 <script>
   // ─── ESTADO ───────────────────────────────────────────────
-  let vista = 'mes';   // 'mes' | 'semana'
-  let offset = 0;      // 0 = actual, -1 = anterior, etc.
+  let vista = 'semana';   // 'mes' | 'semana'
+  let offset = 1;      // 0 = actual, -1 = anterior, etc.
   let tipoActual = 'ingreso';
 
   const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
@@ -457,20 +457,26 @@
   }
 
   function labelPeriodo() {
-    const hoy = new Date();
-    if (vista === 'mes') {
-      const d = new Date(hoy.getFullYear(), hoy.getMonth() + offset, 1);
-      return `${MESES[d.getMonth()]} ${d.getFullYear()}`;
-    } else {
-      const d = new Date(hoy);
-      d.setDate(d.getDate() + offset * 7);
-      const lunes = new Date(d);
-      lunes.setDate(d.getDate() - (d.getDay() + 6) % 7);
-      const domingo = new Date(lunes);
-      domingo.setDate(lunes.getDate() + 6);
-      const fmt = dt => `${dt.getDate()} ${MESES[dt.getMonth()].slice(0,3)}`;
-      return `${fmt(lunes)} – ${fmt(domingo)}`;
-    }
+  const hoy = new Date();
+
+  if (vista === 'mes') {
+    const d = new Date(hoy.getFullYear(), hoy.getMonth() + offset, 1);
+    return `${MESES[d.getMonth()]} ${d.getFullYear()}`;
+  }
+
+  const d = new Date(hoy);
+  d.setDate(d.getDate() + offset * 7);
+
+  const lunes = new Date(d);
+  lunes.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+
+  const domingo = new Date(lunes);
+  domingo.setDate(lunes.getDate() + 6);
+
+  const fmt = dt =>
+    `${dt.getDate()} ${MESES[dt.getMonth()].slice(0,3)}`;
+
+  return `💰 Dinero para la semana ${fmt(lunes)} - ${fmt(domingo)}`;
   }
 
   // ─── DATOS ────────────────────────────────────────────────
@@ -490,11 +496,21 @@
   }
 
   function cambiarVista(v) {
-    vista = v; offset = 0;
-    document.querySelectorAll('.periodo-btn').forEach((b,i) => {
-      b.classList.toggle('active', (v==='mes' && i===0)||(v==='semana' && i===1));
-    });
-    render();
+  vista = v;
+  if (v === 'semana') {
+    offset = 1;
+  } else {
+    offset = 0;
+  }
+  document.querySelectorAll('.periodo-btn').forEach((b,i) => {
+    b.classList.toggle(
+      'active',
+      (v === 'mes' && i === 0) ||
+      (v === 'semana' && i === 1)
+    );
+  });
+
+  render();
   }
 
   function navegar(dir) { offset += dir; render(); }
