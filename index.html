@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mi Cuaderno</title>
+<title>Cuaderno Financiero</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#1a1a2e">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -351,7 +351,7 @@
 <div class="cuaderno">
 
   <div class="header">
-    <h1>📒 Cuaderno Finaciero</h1>
+    <h1>📒 Cuaderno Financiero</h1>
     <p>💰 Planifica y distribuye tu dinero para la próxima semana</p>
   </div>
 
@@ -476,7 +476,7 @@
   const fmt = dt =>
     `${dt.getDate()} ${MESES[dt.getMonth()].slice(0,3)}`;
 
-  return `💰 Dinero para la semana ${fmt(lunes)} - ${fmt(domingo)}`;
+  return `💰 Dinero para semana ${fmt(lunes)} - ${fmt(domingo)}`;
   }
 
   // ─── DATOS ────────────────────────────────────────────────
