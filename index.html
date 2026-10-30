@@ -21,6 +21,7 @@
     --income-bg: #d8f3dc;
     --expense: #b5192c;
     --expense-bg: #ffe0e3;
+    --pending: #b26a00;
     --accent: #3a86ff;
     --shadow: rgba(0,0,0,0.08);
   }
@@ -35,16 +36,10 @@
       radial-gradient(circle at 80% 80%, rgba(181,25,44,0.04) 0%, transparent 60%);
   }
 
-  .cuaderno {
-    max-width: 640px;
-    margin: 0 auto;
-  }
+  .cuaderno { max-width: 640px; margin: 0 auto; }
 
   /* ENCABEZADO */
-  .header {
-    text-align: center;
-    margin-bottom: 28px;
-  }
+  .header { text-align: center; margin-bottom: 28px; }
   .header h1 {
     font-family: 'Caveat', cursive;
     font-size: 2.6rem;
@@ -52,11 +47,7 @@
     color: var(--ink);
     letter-spacing: -0.5px;
   }
-  .header p {
-    font-size: 0.82rem;
-    color: var(--ink-light);
-    margin-top: 4px;
-  }
+  .header p { font-size: 0.82rem; color: var(--ink-light); margin-top: 4px; }
 
   /* SELECTOR PERÍODO */
   .periodo-bar {
@@ -80,12 +71,9 @@
     cursor: pointer;
     transition: all 0.2s;
   }
-  .periodo-btn.active {
-    background: var(--ink);
-    color: #fff;
-  }
+  .periodo-btn.active { background: var(--ink); color: #fff; }
 
-  /* SELECTOR MES/SEMANA */
+  /* NAVEGACIÓN */
   .nav-periodo {
     display: flex;
     align-items: center;
@@ -117,7 +105,7 @@
   /* RESUMEN */
   .resumen {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: repeat(2, 1fr);
     gap: 10px;
     margin-bottom: 20px;
   }
@@ -143,12 +131,9 @@
   }
   .card.ingresos .monto { color: var(--income); }
   .card.gastos .monto { color: var(--expense); }
+  .card.pendiente .monto { color: var(--pending); }
   .card.balance .monto { color: var(--ink); }
-  .card .porcentaje {
-    font-size: 0.72rem;
-    color: var(--ink-light);
-    margin-top: 4px;
-  }
+  .card .porcentaje { font-size: 0.72rem; color: var(--ink-light); margin-top: 4px; }
 
   /* BARRA VISUAL */
   .barra-wrap {
@@ -195,12 +180,7 @@
     color: var(--ink);
     margin-bottom: 14px;
   }
-  .form-row {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 10px;
-    flex-wrap: wrap;
-  }
+  .form-row { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
   .tipo-btn {
     flex: 1;
     padding: 10px;
@@ -317,6 +297,7 @@
     font-size: 0.9rem;
     color: var(--ink);
     line-height: 1.3;
+    word-break: break-word;
   }
   .entrada .desc small {
     display: block;
@@ -345,6 +326,30 @@
   }
   .entrada.ingreso:hover .btn-del { color: var(--income); }
   .entrada.gasto:hover .btn-del { color: var(--expense); }
+
+  /* PAGADO */
+  .btn-check {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    border: 2px solid var(--expense);
+    border-radius: 6px;
+    background: #fff;
+    color: var(--income);
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 0;
+  }
+  .btn-check.marcado {
+    background: var(--income-bg);
+    border-color: var(--income);
+  }
+  .entrada.pagado .desc,
+  .entrada.pagado .valor {
+    text-decoration: line-through;
+    opacity: 0.45;
+  }
 </style>
 </head>
 <body>
@@ -357,8 +362,8 @@
 
   <!-- PERÍODO -->
   <div class="periodo-bar">
-<button class="periodo-btn" onclick="cambiarVista('mes')">Por mes</button>
-<button class="periodo-btn active" onclick="cambiarVista('semana')">Por semana</button>
+    <button class="periodo-btn" onclick="cambiarVista('mes')">Por mes</button>
+    <button class="periodo-btn active" onclick="cambiarVista('semana')">Por semana</button>
   </div>
 
   <!-- NAVEGACIÓN -->
@@ -378,8 +383,12 @@
       <div class="etiqueta">Gastos</div>
       <div class="monto" id="total-gastos">S/ 0</div>
     </div>
+    <div class="card pendiente">
+      <div class="etiqueta">Por pagar</div>
+      <div class="monto" id="total-pendiente">S/ 0</div>
+    </div>
     <div class="card balance">
-      <div class="etiqueta">Balance</div>
+      <div class="etiqueta">Te sobra</div>
       <div class="monto" id="total-balance">S/ 0</div>
       <div class="porcentaje" id="pct-gastos"></div>
     </div>
@@ -404,7 +413,7 @@
       <button class="tipo-btn gasto" id="btn-gasto" onclick="setTipo('gasto')">− Gasto</button>
     </div>
     <div class="input-row" style="margin-bottom:10px">
-      <input type="text" id="inp-desc" placeholder="¿Qué es? (ej: sueldo, alquiler, deuda...)" maxlength="80">
+      <input type="text" id="inp-desc" placeholder="¿Qué es? (ej: sueldo, comida, cuarto...)" maxlength="80">
       <input type="number" id="inp-monto" placeholder="Monto" min="0" step="0.01">
     </div>
     <button class="btn-agregar" onclick="agregar()">Agregar al cuaderno</button>
@@ -422,7 +431,7 @@
 <script>
   // ─── ESTADO ───────────────────────────────────────────────
   let vista = 'semana';   // 'mes' | 'semana'
-  let offset = 1;      // 0 = actual, -1 = anterior, etc.
+  let offset = 1;         // 0 = actual, 1 = próxima semana, -1 = anterior, etc.
   let tipoActual = 'ingreso';
 
   const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
@@ -435,7 +444,6 @@
       const d = new Date(hoy.getFullYear(), hoy.getMonth() + offset, 1);
       return `mes_${d.getFullYear()}_${d.getMonth()}`;
     } else {
-      // semana ISO
       const d = new Date(hoy);
       d.setDate(d.getDate() + offset * 7);
       const sem = semanaISO(d);
@@ -457,26 +465,25 @@
   }
 
   function labelPeriodo() {
-  const hoy = new Date();
+    const hoy = new Date();
 
-  if (vista === 'mes') {
-    const d = new Date(hoy.getFullYear(), hoy.getMonth() + offset, 1);
-    return `${MESES[d.getMonth()]} ${d.getFullYear()}`;
-  }
+    if (vista === 'mes') {
+      const d = new Date(hoy.getFullYear(), hoy.getMonth() + offset, 1);
+      return `${MESES[d.getMonth()]} ${d.getFullYear()}`;
+    }
 
-  const d = new Date(hoy);
-  d.setDate(d.getDate() + offset * 7);
+    const d = new Date(hoy);
+    d.setDate(d.getDate() + offset * 7);
 
-  const lunes = new Date(d);
-  lunes.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+    const lunes = new Date(d);
+    lunes.setDate(d.getDate() - ((d.getDay() + 6) % 7));
 
-  const domingo = new Date(lunes);
-  domingo.setDate(lunes.getDate() + 6);
+    const domingo = new Date(lunes);
+    domingo.setDate(lunes.getDate() + 6);
 
-  const fmt = dt =>
-    `${dt.getDate()} ${MESES[dt.getMonth()].slice(0,3)}`;
+    const fmtFecha = dt => `${dt.getDate()} ${MESES[dt.getMonth()].slice(0,3)}`;
 
-  return `💰 Dinero para semana ${fmt(lunes)} - ${fmt(domingo)}`;
+    return `💰 Dinero para semana ${fmtFecha(lunes)} - ${fmtFecha(domingo)}`;
   }
 
   // ─── DATOS ────────────────────────────────────────────────
@@ -491,26 +498,17 @@
   // ─── UI ───────────────────────────────────────────────────
   function setTipo(t) {
     tipoActual = t;
-    document.getElementById('btn-ingreso').className = 'tipo-btn ingreso' + (t==='ingreso' ? ' active' : '');
-    document.getElementById('btn-gasto').className = 'tipo-btn gasto' + (t==='gasto' ? ' active' : '');
+    document.getElementById('btn-ingreso').className = 'tipo-btn ingreso' + (t === 'ingreso' ? ' active' : '');
+    document.getElementById('btn-gasto').className = 'tipo-btn gasto' + (t === 'gasto' ? ' active' : '');
   }
 
   function cambiarVista(v) {
-  vista = v;
-  if (v === 'semana') {
-    offset = 1;
-  } else {
-    offset = 0;
-  }
-  document.querySelectorAll('.periodo-btn').forEach((b,i) => {
-    b.classList.toggle(
-      'active',
-      (v === 'mes' && i === 0) ||
-      (v === 'semana' && i === 1)
-    );
-  });
-
-  render();
+    vista = v;
+    offset = (v === 'semana') ? 1 : 0;
+    document.querySelectorAll('.periodo-btn').forEach((b, i) => {
+      b.classList.toggle('active', (v === 'mes' && i === 0) || (v === 'semana' && i === 1));
+    });
+    render();
   }
 
   function navegar(dir) { offset += dir; render(); }
@@ -523,7 +521,7 @@
       return;
     }
     const arr = getData();
-    arr.unshift({ id: Date.now(), tipo: tipoActual, desc, monto });
+    arr.unshift({ id: Date.now(), tipo: tipoActual, desc, monto, pagado: false });
     saveData(arr);
     document.getElementById('inp-desc').value = '';
     document.getElementById('inp-monto').value = '';
@@ -536,10 +534,24 @@
     render();
   }
 
+  function togglePagado(id) {
+    const arr = getData().map(e =>
+      e.id === id ? { ...e, pagado: !e.pagado } : e
+    );
+    saveData(arr);
+    render();
+  }
+
   function limpiarPeriodo() {
     if (!confirm(`¿Borrar todas las anotaciones de "${labelPeriodo()}"?`)) return;
     localStorage.removeItem(claveActual());
     render();
+  }
+
+  function escapar(t) {
+    const d = document.createElement('div');
+    d.textContent = t;
+    return d.innerHTML;
   }
 
   function fmt(n) {
@@ -551,19 +563,21 @@
     document.getElementById('lista-titulo').textContent = `Anotaciones · ${labelPeriodo()}`;
 
     const arr = getData();
-    const ingresos = arr.filter(e=>e.tipo==='ingreso').reduce((s,e)=>s+e.monto,0);
-    const gastos = arr.filter(e=>e.tipo==='gasto').reduce((s,e)=>s+e.monto,0);
+    const ingresos = arr.filter(e => e.tipo === 'ingreso').reduce((s, e) => s + e.monto, 0);
+    const gastos = arr.filter(e => e.tipo === 'gasto').reduce((s, e) => s + e.monto, 0);
+    const porPagar = arr.filter(e => e.tipo === 'gasto' && !e.pagado).reduce((s, e) => s + e.monto, 0);
     const balance = ingresos - gastos;
     const pct = ingresos > 0 ? Math.round((gastos / ingresos) * 100) : 0;
 
     document.getElementById('total-ingresos').textContent = fmt(ingresos);
     document.getElementById('total-gastos').textContent = fmt(gastos);
+    document.getElementById('total-pendiente').textContent = fmt(porPagar);
+
     const balEl = document.getElementById('total-balance');
     balEl.textContent = fmt(balance);
     balEl.style.color = balance >= 0 ? 'var(--income)' : 'var(--expense)';
 
-    const pctEl = document.getElementById('pct-gastos');
-    pctEl.textContent = ingresos > 0 ? `${pct}% gastado` : '';
+    document.getElementById('pct-gastos').textContent = ingresos > 0 ? `${pct}% gastado` : '';
 
     // barra
     const barraWrap = document.getElementById('barra-wrap');
@@ -585,19 +599,25 @@
         </div>`;
       return;
     }
+
     lista.innerHTML = arr.map(e => `
-      <div class="entrada ${e.tipo}">
+      <div class="entrada ${e.tipo} ${e.pagado ? 'pagado' : ''}">
+        ${e.tipo === 'gasto'
+          ? `<button class="btn-check ${e.pagado ? 'marcado' : ''}"
+               onclick="togglePagado(${e.id})"
+               title="Marcar como pagado">${e.pagado ? '✓' : ''}</button>`
+          : ''}
         <div class="desc">
-          ${e.desc}
-          <small>${e.tipo === 'ingreso' ? 'Ingreso' : 'Gasto'}</small>
+          ${escapar(e.desc)}
+          <small>${e.tipo === 'ingreso' ? 'Ingreso' : 'Gasto'}${e.pagado ? ' · pagado' : ''}</small>
         </div>
-        <div class="valor">${e.tipo==='ingreso' ? '+' : '−'} ${fmt(e.monto)}</div>
+        <div class="valor">${e.tipo === 'ingreso' ? '+' : '−'} ${fmt(e.monto)}</div>
         <button class="btn-del" onclick="eliminar(${e.id})" title="Eliminar">✕</button>
       </div>
     `).join('');
   }
 
-  // ENTER en inputs
+  // ─── INICIO ───────────────────────────────────────────────
   document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('inp-desc').addEventListener('keydown', e => {
       if (e.key === 'Enter') document.getElementById('inp-monto').focus();
@@ -607,7 +627,6 @@
     });
     render();
 
-    // Registrar Service Worker
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js');
     }
